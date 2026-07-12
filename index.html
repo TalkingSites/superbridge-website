@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>superbridge · one room, every app</title>
+<meta name="description" content="Superbridge is what a community's chat looks like once every platform it uses is wired into the same room. See how it works, what can be bridged, and who's already running it.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://superbridge.chat/">
+<meta property="og:title" content="superbridge">
+<meta property="og:description" content="One room, every app. See how superbridge works, what can be bridged, and who's already running it.">
+<meta property="og:image" content="https://superbridge.chat/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="superbridge">
+<meta name="twitter:description" content="One room, every app. See how superbridge works, what can be bridged, and who's already running it.">
+<meta name="twitter:image" content="https://superbridge.chat/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Source+Sans+3:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #FAFAF8;
+    --ink: #101114;
+    --accent: #D8481F;
+    --accent-soft: #D8481F1a;
+    --line: #E2E4E8;
+    --muted: #62666E;
+    --surface: #FFFFFF;
+    --chat-bg: #F3F4F6;
+
+    --tg: #26A5E4;
+    --dc: #5865F2;
+    --sig: #3A76F0;
+    --wa: #25D366;
+    --mx: #0DBD8B;
+
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Source Sans 3', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- icon system ---------- */
+  .icon {
+    display: inline-block;
+    -webkit-mask-image: var(--icon-url);
+    mask-image: var(--icon-url);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    background-color: var(--icon-color, currentColor);
+    flex-shrink: 0;
+  }
+
+  /* ---------- nav ---------- */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0;
+  }
+  .nav .wordmark {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .nav .wordmark::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .nav .navlink {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .nav .navlink:hover { color: var(--ink); border-color: var(--ink); }
+
+  /* ---------- eyebrow / section labels ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 14px;
+    height: 1px;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  section { padding: 88px 0; }
+  section + section { border-top: 1px solid var(--line); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    padding-top: 40px;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(38px, 5vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0 0 24px;
+  }
+  .hero p.lede {
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0;
+  }
+  .hero .term { color: var(--accent); }
+
+  /* ---------- diagram: scattered graph ---------- */
+  .diagram-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .diagram-wheel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2.4 / 1;
+  }
+  .diagram-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .diagram-line {
+    fill: none;
+    stroke: var(--ink);
+    stroke-opacity: 0;
+    stroke-width: 1px;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .draw {
+    animation: draw 500ms ease forwards;
+  }
+  @keyframes draw { to { stroke-opacity: 0.22; } }
+
+  .diagram-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 6.5%;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 3px var(--paper);
+    opacity: 0;
+    animation: settle 900ms cubic-bezier(.34,1.2,.32,1) forwards;
+  }
+  .diagram-node .icon { width: 55%; height: 55%; }
+  .diagram-hub {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8.5%;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background: var(--mx);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 4px var(--paper);
+  }
+  .diagram-hub .icon { width: 45%; height: 45%; }
+  @keyframes settle {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.2) rotate(-14deg); }
+    55%  { opacity: 1; transform: translate(-50%,-50%) scale(1.15) rotate(6deg); }
+    75%  { transform: translate(-50%,-50%) scale(0.92) rotate(-3deg); }
+    90%  { transform: translate(-50%,-50%) scale(1.04) rotate(1deg); }
+    100% { opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+  }
+
+  .diagram-caption {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: center;
+    margin: 16px 0 4px;
+  }
+  .diagram-caption .term { color: var(--accent); }
+
+  /* ---------- see it happen: platform tabs ---------- */
+  .tabs-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .tab-list {
+    display: flex;
+    gap: 4px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .tab-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .tab-trigger:hover { color: var(--ink); }
+  .tab-trigger.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab-trigger .icon { width: 15px; height: 15px; }
+
+  .tab-pane[hidden] { display: none; }
+  .pane-header { padding: 14px 20px; }
+  .pane-body { min-height: 440px; }
+  .pane-title { font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .pane-subtitle { font-family: var(--mono); font-size: 11.5px; margin-top: 2px; }
+
+  .msg-row { display: flex; gap: 10px; align-items: flex-start; opacity: 0; transform: translateY(6px); animation: rise 400ms ease forwards; }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+  .p-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .avatar-badge {
+    position: absolute;
+    bottom: -3px; right: -3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .avatar-badge .icon { width: 9px; height: 9px; }
+
+  /* telegram pane */
+  .tg-pane .pane-header { background: #fff; border-bottom: 1px solid var(--line); }
+  .tg-pane .pane-subtitle { color: #5B9FC7; }
+  .tg-pane .pane-body { background: #E9F3FB; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .tg-pane .avatar-badge { border-color: #E9F3FB; }
+  .tg-pane .bubble { background: #fff; border-radius: 14px 14px 14px 4px; padding: 8px 12px 6px; box-shadow: 0 1px 2px rgba(16,17,20,.08); max-width: 78%; }
+  .tg-pane .bname { font-weight: 700; font-size: 12.5px; margin-bottom: 2px; }
+  .tg-pane .btext { font-size: 14.5px; line-height: 1.4; }
+  .tg-pane .btime { font-family: var(--mono); font-size: 10.5px; color: #9AA3AD; text-align: right; margin-top: 2px; }
+
+  /* whatsapp pane */
+  .wa-pane .pane-header { background: #075E54; }
+  .wa-pane .pane-title { color: #fff; }
+  .wa-pane .pane-subtitle { color: #CFEDE8; }
+  .wa-pane .pane-body { background: #E5DDD5; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .wa-pane .avatar-badge { border-color: #E5DDD5; }
+  .wa-pane .bubble { background: #fff; border-radius: 8px 8px 8px 2px; padding: 8px 12px 6px; box-shadow: 0 1px 2px rgba(16,17,20,.1); max-width: 78%; }
+  .wa-pane .bname { font-weight: 700; font-size: 12.5px; margin-bottom: 2px; }
+  .wa-pane .btext { font-size: 14.5px; line-height: 1.4; }
+  .wa-pane .btime { font-family: var(--mono); font-size: 10.5px; color: #7A8A82; text-align: right; margin-top: 2px; }
+
+  /* matrix / element pane */
+  .mx-pane .pane-header { background: #fff; border-bottom: 1px solid var(--line); }
+  .mx-pane .pane-subtitle { color: var(--muted); }
+  .mx-pane .pane-body { background: #fff; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .mx-pane .avatar-badge { border-color: #fff; }
+  .mx-pane .flat-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+  .mx-pane .bname { font-weight: 700; font-size: 13.5px; }
+  .mx-pane .btime { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .mx-pane .btext { font-size: 14.5px; }
+
+  .mockup-caption { font-size: 15px; color: var(--muted); margin: 20px 2px 0; }
+
+  /* ---------- how it's built ---------- */
+  .built-copy-full { margin-bottom: 40px; }
+  .built-copy p { color: var(--muted); font-size: 17px; }
+  .built-copy p + p { margin-top: 16px; }
+  .built-copy strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- shared cta card ---------- */
+  .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cta {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 26px;
+    text-decoration: none;
+    color: var(--ink);
+    display: block;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .cta:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .cta .cta-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .ew-logo { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+  .cta h4 { font-family: var(--display); font-size: 21px; margin: 0 0 10px; }
+  .cta p { font-size: 15px; color: var(--muted); margin: 0; }
+  .cta .go { color: var(--accent); font-family: var(--mono); font-size: 13.5px; margin-top: 16px; display: block; }
+
+  .cta-primary { background: var(--accent); border-color: var(--accent); }
+  .cta-primary:hover { background: #C13F19; border-color: #C13F19; }
+  .cta-primary .cta-label { color: rgba(255,255,255,.75); }
+  .cta-primary h4 { color: #fff; }
+  .cta-primary p { color: rgba(255,255,255,.88); }
+  .cta-primary .go { color: #fff; font-weight: 600; }
+
+  /* ---------- what can be bridged ---------- */
+  .bridge-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+  .bridge-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .bridge-card .icon { width: 18px; height: 18px; }
+
+  .bridge-note { font-size: 15px; color: var(--muted); margin-top: 24px; }
+  .bridge-note a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .bridge-note a:hover { border-color: var(--accent); }
+
+  /* ---------- directory ---------- */
+  .directory-sub { color: var(--muted); font-size: 17px; max-width: 56ch; margin: -6px 0 36px; }
+  .directory {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    transition: border-color .15s ease, transform .15s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .favicon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    object-fit: cover;
+    background: var(--paper);
+    display: block;
+    flex-shrink: 0;
+  }
+  .card h3 { font-family: var(--display); font-size: 19px; margin: 0; }
+  .ew-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 4px 10px;
+    width: fit-content;
+    margin-top: 6px;
+  }
+  .card p.desc { color: var(--muted); font-size: 14.5px; margin: 0 0 18px; }
+
+  .platform-list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+  .platform-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    margin: 0 -8px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background .15s ease;
+  }
+  .platform-item:hover { background: var(--paper); }
+  .platform-item .icon { width: 16px; height: 16px; }
+  .platform-item .p-arrow { margin-left: auto; color: var(--muted); font-size: 11px; }
+
+  .card-links { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: auto; }
+  .card-link {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ---------- footer ---------- */
+  footer { padding: 56px 0 56px; }
+  footer .cta-grid { margin-bottom: 48px; }
+  .foot-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    border-top: 1px solid var(--line);
+    padding-top: 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .foot-col { display: flex; flex-direction: column; gap: 10px; }
+  .foot-col-right { align-items: flex-end; text-align: right; }
+  .foot-github, .foot-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .foot-github:hover { color: var(--accent); }
+  .foot-credit { margin: 0; white-space: nowrap; line-height: 1.5; }
+  .foot-credit a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .foot-credit a:hover { border-color: var(--accent); }
+  .foot-tagline { color: var(--muted); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 960px) {
+    .directory { grid-template-columns: repeat(2, 1fr); }
+    .bridge-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .cta-grid { grid-template-columns: 1fr; }
+    .foot-grid { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .foot-col-right { align-items: flex-start; text-align: left; order: -1; }
+    section { padding: 56px 0; }
+  }
+  @media (max-width: 560px) {
+    .directory { grid-template-columns: 1fr; }
+    .bridge-grid { grid-template-columns: repeat(2, 1fr); }
+    .foot-credit { white-space: normal; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .msg-row { opacity: 1; transform: none; }
+    .diagram-node { opacity: 1; transform: translate(-50%,-50%); }
+    .diagram-line { stroke-opacity: 0.22; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <a class="wordmark" href="#top">superbridge</a>
+  </nav>
+</div>
+
+<div class="wrap">
+  <section class="hero" id="top">
+    <div>
+      <h1>One group chat.<br>Every app your people<br>already use.</h1>
+      <p class="lede"><span class="term">Superbridge</span> is what happens when every app your community already uses gets wired into the same room. Send a message from any of them, and everyone sees it, no matter where they're typing from.</p>
+    </div>
+    <div class="hero-tabs">
+    <div class="tabs-panel">
+      <div class="tab-list" role="tablist">
+        <button class="tab-trigger active" role="tab" aria-selected="true" aria-controls="pane-telegram" id="tab-telegram" data-pane="pane-telegram">
+          <span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#26A5E4;"></span>
+          Telegram
+        </button>
+        <button class="tab-trigger" role="tab" aria-selected="false" aria-controls="pane-whatsapp" id="tab-whatsapp" data-pane="pane-whatsapp">
+          <span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#25D366;"></span>
+          WhatsApp
+        </button>
+        <button class="tab-trigger" role="tab" aria-selected="false" aria-controls="pane-matrix" id="tab-matrix" data-pane="pane-matrix">
+          <span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#0DBD8B;"></span>
+          Matrix
+        </button>
+      </div>
+
+      <div class="tab-pane tg-pane" id="pane-telegram" role="tabpanel" aria-labelledby="tab-telegram">
+        <div class="pane-header">
+          <div class="pane-title">the group chat</div>
+        </div>
+        <div class="pane-body">
+          <div class="msg-row" style="animation-delay:0ms;">
+            <div class="p-avatar" style="background:#E17076;">M</div>
+            <div class="bubble"><div class="bname" style="color:#E17076;">Mira</div><div class="btext">anyone tried the new release yet?</div><div class="btime">4m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:80ms;">
+            <div class="p-avatar" style="background:#7C68EE;">J<span class="avatar-badge" style="background:#5865F2;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#7C68EE;">jax</div><div class="btext">running it right now, feels a lot faster</div><div class="btime">3m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:160ms;">
+            <div class="p-avatar" style="background:#2CA5A5;">P<span class="avatar-badge" style="background:#3A76F0;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#2CA5A5;">Priya</div><div class="btext">🔥 results, sharing my config in a sec</div><div class="btime">2m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:240ms;">
+            <div class="p-avatar" style="background:#E2A93A;">T<span class="avatar-badge" style="background:#25D366;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#E2A93A;">Tom</div><div class="btext">sending a screenshot</div><div class="btime">1m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:320ms;">
+            <div class="p-avatar" style="background:#4FAE4E;">W<span class="avatar-badge" style="background:#0DBD8B;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#4FAE4E;">Wei</div><div class="btext">nice, added it to the pinned notes</div><div class="btime">now</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane wa-pane" id="pane-whatsapp" role="tabpanel" aria-labelledby="tab-whatsapp" hidden>
+        <div class="pane-header">
+          <div class="pane-title">the group chat</div>
+        </div>
+        <div class="pane-body">
+          <div class="msg-row" style="animation-delay:0ms;">
+            <div class="p-avatar" style="background:#E17076;">M<span class="avatar-badge" style="background:#26A5E4;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#E17076;">Mira</div><div class="btext">anyone tried the new release yet?</div><div class="btime">4m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:80ms;">
+            <div class="p-avatar" style="background:#7C68EE;">J<span class="avatar-badge" style="background:#5865F2;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#7C68EE;">jax</div><div class="btext">running it right now, feels a lot faster</div><div class="btime">3m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:160ms;">
+            <div class="p-avatar" style="background:#2CA5A5;">P<span class="avatar-badge" style="background:#3A76F0;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#2CA5A5;">Priya</div><div class="btext">🔥 results, sharing my config in a sec</div><div class="btime">2m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:240ms;">
+            <div class="p-avatar" style="background:#E2A93A;">T</div>
+            <div class="bubble"><div class="bname" style="color:#E2A93A;">Tom</div><div class="btext">sending a screenshot</div><div class="btime">1m</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:320ms;">
+            <div class="p-avatar" style="background:#4FAE4E;">W<span class="avatar-badge" style="background:#0DBD8B;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="bubble"><div class="bname" style="color:#4FAE4E;">Wei</div><div class="btext">nice, added it to the pinned notes</div><div class="btime">now</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane mx-pane" id="pane-matrix" role="tabpanel" aria-labelledby="tab-matrix" hidden>
+        <div class="pane-header">
+          <div class="pane-title">the group chat</div>
+        </div>
+        <div class="pane-body">
+          <div class="msg-row" style="animation-delay:0ms;">
+            <div class="p-avatar" style="background:#E17076;">M<span class="avatar-badge" style="background:#26A5E4;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="flat-col"><div class="flat-meta"><span class="bname" style="color:#E17076;">Mira</span><span class="btime">4m ago</span></div><div class="btext">anyone tried the new release yet?</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:80ms;">
+            <div class="p-avatar" style="background:#7C68EE;">J<span class="avatar-badge" style="background:#5865F2;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="flat-col"><div class="flat-meta"><span class="bname" style="color:#7C68EE;">jax</span><span class="btime">3m ago</span></div><div class="btext">running it right now, feels a lot faster</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:160ms;">
+            <div class="p-avatar" style="background:#2CA5A5;">P<span class="avatar-badge" style="background:#3A76F0;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="flat-col"><div class="flat-meta"><span class="bname" style="color:#2CA5A5;">Priya</span><span class="btime">2m ago</span></div><div class="btext">🔥 results, sharing my config in a sec</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:240ms;">
+            <div class="p-avatar" style="background:#E2A93A;">T<span class="avatar-badge" style="background:#25D366;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#fff;"></span></span></div>
+            <div class="flat-col"><div class="flat-meta"><span class="bname" style="color:#E2A93A;">Tom</span><span class="btime">1m ago</span></div><div class="btext">sending a screenshot</div></div>
+          </div>
+          <div class="msg-row" style="animation-delay:320ms;">
+            <div class="p-avatar" style="background:#4FAE4E;">W</div>
+            <div class="flat-col"><div class="flat-meta"><span class="bname" style="color:#4FAE4E;">Wei</span><span class="btime">now</span></div><div class="btext">nice, added it to the pinned notes</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mockup-caption">All platforms are superbridged, made possible with Matrix and mautrix.</p>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section id="network">
+    <p class="eyebrow">the full picture</p>
+    <div class="diagram-panel">
+      <div class="diagram-wheel" role="img" aria-label="Diagram showing Matrix at the center, connected to Telegram, Discord, WhatsApp, Signal, Slack, Messenger, Instagram, iMessage, Google Chat, Google Messages, LinkedIn, Bluesky, Zulip and X">
+        <svg class="diagram-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path class="diagram-line draw" d="M48,10 L50,50" style="animation-delay:60ms"/>
+          <path class="diagram-line draw" d="M74,14 L50,50" style="animation-delay:220ms"/>
+          <path class="diagram-line draw" d="M92,22 L50,50" style="animation-delay:340ms"/>
+          <path class="diagram-line draw" d="M95,45 L50,50" style="animation-delay:120ms"/>
+          <path class="diagram-line draw" d="M90,72 L50,50" style="animation-delay:400ms"/>
+          <path class="diagram-line draw" d="M57,93 L50,50" style="animation-delay:180ms"/>
+          <path class="diagram-line draw" d="M40,94 L50,50" style="animation-delay:300ms"/>
+          <path class="diagram-line draw" d="M16,86 L50,50" style="animation-delay:20ms"/>
+          <path class="diagram-line draw" d="M4,62 L50,50" style="animation-delay:260ms"/>
+          <path class="diagram-line draw" d="M6,34 L50,50" style="animation-delay:80ms"/>
+          <path class="diagram-line draw" d="M18,12 L50,50" style="animation-delay:380ms"/>
+          <path class="diagram-line draw" d="M37,17 L50,50" style="animation-delay:140ms"/>
+          <path class="diagram-line draw" d="M55,24 L50,50" style="animation-delay:240ms"/>
+          <path class="diagram-line draw" d="M66,76 L50,50" style="animation-delay:0ms"/>
+        </svg>
+
+        <div class="diagram-node" title="Telegram" style="left:48%; top:10%; background:#26A5E4; animation-delay:60ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Discord" style="left:74%; top:14%; background:#5865F2; animation-delay:220ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="WhatsApp" style="left:92%; top:22%; background:#25D366; animation-delay:340ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Signal" style="left:95%; top:45%; background:#3A76F0; animation-delay:120ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Slack" style="left:90%; top:72%; background:#4A154B; animation-delay:400ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/slack.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Messenger" style="left:57%; top:93%; background:#0084FF; animation-delay:180ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/messenger.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Instagram" style="left:40%; top:94%; background:#E4405F; animation-delay:300ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/instagram.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="iMessage" style="left:16%; top:86%; background:#34C759; animation-delay:20ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/imessage.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Google Chat" style="left:4%; top:62%; background:#00AC47; animation-delay:260ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlechat.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Google Messages" style="left:6%; top:34%; background:#1A73E8; animation-delay:80ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlemessages.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="LinkedIn" style="left:18%; top:12%; background:#0A66C2; animation-delay:380ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/linkedin.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Bluesky" style="left:37%; top:17%; background:#1185FE; animation-delay:140ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bluesky.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="Zulip" style="left:55%; top:24%; background:#6C6DC5; animation-delay:240ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/zulip.svg'); --icon-color:#fff;"></span></div>
+        <div class="diagram-node" title="X (Twitter)" style="left:66%; top:76%; background:#000000; animation-delay:0ms;"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg'); --icon-color:#fff;"></span></div>
+
+        <div class="diagram-hub">
+          <span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#fff;"></span>
+        </div>
+      </div>
+      <p class="diagram-caption">All platforms are <span class="term">superbridged</span>, made possible with Matrix and mautrix.</p>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section id="how">
+    <p class="eyebrow">how it's built</p>
+    <div class="built-copy built-copy-full">
+      <p>Superbridge isn't a company or a product you sign up for. It's what a community's chat looks like once every platform it uses has been bridged together.</p>
+      <p>How is that possible? First, a <strong>Matrix</strong> server gets self-hosted. Then each platform is bridged in through a bot sitting in the chat, talking to <strong>mautrix</strong> running on that same Matrix server.</p>
+      <p>From there, every message sent on any platform gets relayed out to all the others through the Matrix relay. Nobody has to leave the app they already have open.</p>
+    </div>
+    <div class="cta-grid">
+      <a class="cta cta-primary" href="https://electronworkshop.org/network/" target="_blank" rel="noopener">
+        <div class="cta-label"><img class="ew-logo" src="https://electronworkshop.org/assets/favicon.ico" alt="">Run a community</div>
+        <h4>Get superbridge set up for you</h4>
+        <p>Electron Network handles the infrastructure for member communities. You just invite the bots.</p>
+        <span class="go">electronworkshop.org/network ↗</span>
+      </a>
+      <a class="cta" href="https://docs.mau.fi/bridges/" target="_blank" rel="noopener">
+        <div class="cta-label">Build it yourself</div>
+        <h4>Wire up your own bridges</h4>
+        <p>mautrix is open source. Run the bridges yourself and connect your own Matrix room.</p>
+        <span class="go">docs.mau.fi/bridges ↗</span>
+      </a>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section id="platforms">
+    <p class="eyebrow">what can be bridged</p>
+    <div class="bridge-grid">
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#26A5E4;"></span>Telegram</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#5865F2;"></span>Discord</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#3A76F0;"></span>Signal</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#25D366;"></span>WhatsApp</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#0DBD8B;"></span>Matrix</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/slack.svg'); --icon-color:#4A154B;"></span>Slack</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/messenger.svg'); --icon-color:#0084FF;"></span>Messenger</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/instagram.svg'); --icon-color:#E4405F;"></span>Instagram</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/imessage.svg'); --icon-color:#34C759;"></span>iMessage</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlechat.svg'); --icon-color:#00AC47;"></span>Google Chat</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/googlemessages.svg'); --icon-color:#1A73E8;"></span>Google Messages</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/linkedin.svg'); --icon-color:#0A66C2;"></span>LinkedIn</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bluesky.svg'); --icon-color:#1185FE;"></span>Bluesky</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/zulip.svg'); --icon-color:#6C6DC5;"></span>Zulip</div>
+      <div class="bridge-card"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg'); --icon-color:#000000;"></span>X (Twitter)</div>
+    </div>
+    <p class="bridge-note">mautrix also maintains bridges for Google Voice and IRC, not pictured above since neither has a distinct brand icon. For build status on any bridge, check <a href="https://docs.mau.fi/bridges/" target="_blank" rel="noopener">docs.mau.fi/bridges</a>.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section id="directory">
+    <p class="eyebrow">superbridged chats</p>
+    <p class="directory-sub">Real communities already running as one room across every app.</p>
+    <div class="directory">
+
+      <div class="card">
+        <div class="card-head">
+          <img class="favicon" src="https://localai.xdeca.com/assets/images/favicon.png" alt="">
+          <h3>local AI</h3>
+        </div>
+        <p class="desc">A community for running AI offline and completely privately on your own computer. Share projects, attend workshops, talks and catchups, get help, and keep up with recent open model releases.</p>
+        <div class="platform-list">
+          <a class="platform-item" href="https://matrix.to/#/#localai:matrix.electronworkshop.com.au" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#0DBD8B;"></span>Matrix<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://t.me/locallyai" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#26A5E4;"></span>Telegram<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://discord.gg/5Hdy9sDJc" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#5865F2;"></span>Discord<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://signal.group/#CjQKIHZrZTIxzHafWjZyC9xhkgR_TR5vJLax3inH7tcI8KkREhBeU4D-TGlNR8rPLZrp_Z9N" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#3A76F0;"></span>Signal<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://chat.whatsapp.com/Dedt78VhMWt3ilEurODCVa?s=qt&amp;p=a&amp;ilr=1" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#25D366;"></span>WhatsApp<span class="p-arrow">↗</span></a>
+          <span class="ew-badge"><img class="ew-logo" src="https://electronworkshop.org/assets/favicon.ico" alt="">Electron Network</span>
+        </div>
+        <div class="card-links">
+          <a class="card-link" href="https://localai.xdeca.com/community" target="_blank" rel="noopener">View community ↗</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <img class="favicon" src="https://imagineering.cc/assets/favicon.png" alt="">
+          <h3>Imagineering</h3>
+        </div>
+        <p class="desc">Whether you're a seasoned builder or just diving into agentic coding, this is your crew. We're a community of developers using agentic AI coding assistants to ship faster, learn together, and stay sharp in a space that's moving at a wild pace. Come build, share, and connect.</p>
+        <div class="platform-list">
+          <a class="platform-item" href="https://matrix.org/?utm_source=superbridge.chat" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/matrix.svg'); --icon-color:#0DBD8B;"></span>Matrix<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://telegram.org/?utm_source=superbridge.chat" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/telegram.svg'); --icon-color:#26A5E4;"></span>Telegram<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://discord.com/?utm_source=superbridge.chat" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/discord.svg'); --icon-color:#5865F2;"></span>Discord<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://signal.org/?utm_source=superbridge.chat" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/signal.svg'); --icon-color:#3A76F0;"></span>Signal<span class="p-arrow">↗</span></a>
+          <a class="platform-item" href="https://www.whatsapp.com/?utm_source=superbridge.chat" target="_blank" rel="noopener"><span class="icon" style="--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/whatsapp.svg'); --icon-color:#25D366;"></span>WhatsApp<span class="p-arrow">↗</span></a>
+        </div>
+        <div class="card-links">
+          <a class="card-link" href="https://imagineering.cc/?utm_source=superbridge.chat" target="_blank" rel="noopener">View community ↗</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <footer>
+    <div class="cta-grid">
+      <a class="cta cta-primary" href="https://electronworkshop.org/network/" target="_blank" rel="noopener">
+        <div class="cta-label"><img class="ew-logo" src="https://electronworkshop.org/assets/favicon.ico" alt="">Run a community</div>
+        <h4>Get superbridge set up for you</h4>
+        <p>Electron Network handles the infrastructure for member communities. You just invite the bots.</p>
+        <span class="go">electronworkshop.org/network ↗</span>
+      </a>
+      <a class="cta" href="https://docs.mau.fi/bridges/" target="_blank" rel="noopener">
+        <div class="cta-label">Build it yourself</div>
+        <h4>Wire up your own bridges</h4>
+        <p>mautrix is open source. Run the bridges yourself and connect your own Matrix room.</p>
+        <span class="go">docs.mau.fi/bridges ↗</span>
+      </a>
+    </div>
+    <div class="foot-grid">
+      <div class="foot-col">
+        <span class="foot-email">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v.01L12 12l8-5.99V6H4zm16 12V8.24l-7.4 5.55a1 1 0 0 1-1.2 0L4 8.24V18h16z"/></svg>
+          network[at]electronworkshop.com.au
+        </span>
+        <a class="foot-github" href="https://github.com/TalkingSites/superbridge-website" target="_blank" rel="noopener">
+          <span class="icon" style="width:16px;height:16px;--icon-url:url('https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/github.svg'); --icon-color:currentColor;"></span>
+          TalkingSites/superbridge-website
+        </a>
+        <p class="foot-credit">Credit: foundational discovery done by <a href="https://www.linkedin.com/in/anjsimmo/" target="_blank" rel="noopener">Angie</a> and <a href="https://www.linkedin.com/in/nicholas-meinhold-3864b812/" target="_blank" rel="noopener">Nick</a>.</p>
+      </div>
+      <div class="foot-col foot-col-right">
+        <span>superbridge.chat</span>
+        <span class="foot-tagline">one room, every app.</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var rows = document.querySelectorAll('.msg-row');
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    rows.forEach(function(r) {
+      r.style.animationPlayState = 'paused';
+      observer.observe(r);
+    });
+  }
+
+  var tabs = document.querySelectorAll('.tab-trigger');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-pane').forEach(function(p) { p.hidden = true; });
+
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      var pane = document.getElementById(tab.dataset.pane);
+      pane.hidden = false;
+      pane.querySelectorAll('.msg-row').forEach(function(r) {
+        r.style.animation = 'none';
+        r.offsetHeight;
+        r.style.animation = null;
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
