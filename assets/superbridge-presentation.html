@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Superbridge · Electron Workshop</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F0E7D7;
+    --card:#FFFBF2;
+    --tan:#E5D6C2;
+    --walnut:#46362A;
+    --ember:#D9532B;
+    --ember-deep:#B23F1C;
+    --oilcloth:#242922;
+    --moss:#667442;
+    --honey:#B07622;
+    --telegram:#26A5E4;
+    --discord:#5865F2;
+    --signal:#3A76F0;
+    --whatsapp:#25D366;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--oilcloth);
+    color:var(--walnut);
+    font-family:'Nunito Sans',sans-serif;
+    overflow:hidden;
+  }
+  .display{font-family:'Bricolage Grotesque',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;}
+
+  /* ---------------- progress bar ---------------- */
+  #progress-track{
+    position:fixed;top:0;left:0;right:0;height:5px;
+    background:rgba(0,0,0,0.25);z-index:100;
+  }
+  #progress-fill{
+    height:100%;background:var(--ember);width:0%;
+    transition:width 0.35s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ---------------- deck / slides ---------------- */
+  #deck{
+    position:relative;
+    width:100vw;height:100vh;
+  }
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;justify-content:center;
+    background:var(--paper);
+    padding:6vh 8vw;
+    opacity:0;
+    transform:translateX(40px);
+    transition:opacity 0.5s ease, transform 0.5s ease;
+    pointer-events:none;
+  }
+  .slide.active{
+    opacity:1;transform:translateX(0);pointer-events:auto;z-index:2;
+  }
+  .slide.exit-left{transform:translateX(-40px);}
+
+  .slide h1{
+    font-size:clamp(2.1rem,5vw,4rem);
+    font-weight:800;line-height:1.05;margin:0 0 1rem 0;
+    max-width:16ch;
+  }
+  .slide p.lead{
+    font-size:clamp(1.05rem,1.6vw,1.4rem);
+    max-width:52ch;line-height:1.5;color:rgba(70,54,42,0.82);margin:0 0 1.5rem 0;
+  }
+  .slide-body{
+    display:grid;grid-template-columns:1.1fr 1fr;gap:4vw;align-items:center;flex:1;min-height:0;
+  }
+  .slide-body.stack{grid-template-columns:1fr;}
+  .slide-body .visual{
+    display:flex;align-items:center;justify-content:center;min-height:0;height:100%;
+  }
+
+  /* ---------------- dark slides ---------------- */
+  .slide.dark{background:var(--oilcloth);color:#F0E7D7;}
+  .slide.dark p.lead{color:#c9c4b4;}
+  #section-tag{
+    position:fixed;top:1.4rem;left:1.6rem;
+    font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;
+    color:rgba(70,54,42,0.45);z-index:50;transition:color 0.3s ease;
+  }
+  #section-tag.on-dark{color:rgba(240,231,215,0.5);}
+
+  /* ---------------- gears ---------------- */
+  .gear{animation:spin linear infinite;transform-origin:center;}
+  .gear.reverse{animation-direction:reverse;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){
+    .gear{animation:none;}
+    .slide{transition:opacity .3s ease;}
+  }
+
+  /* ---------------- train label chip ---------------- */
+  .chip{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.62rem;
+    letter-spacing:0.14em;text-transform:uppercase;
+    padding:.2em .55em;border-radius:4px;
+    background:var(--card);color:rgba(70,54,42,0.7);
+    position:absolute;white-space:nowrap;
+  }
+  .chip.dark-chip{background:var(--walnut);color:var(--card);}
+
+  /* ---------------- lists ---------------- */
+  ul.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.9rem;}
+  ul.steps li{
+    display:flex;align-items:flex-start;gap:1rem;
+    font-size:1.05rem;line-height:1.4;
+  }
+  .num{
+    flex-shrink:0;width:2rem;height:2rem;border-radius:50%;
+    background:rgba(217,83,43,0.14);color:var(--ember-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:0.95rem;
+  }
+  .dark .num{background:rgba(217,83,43,0.22);color:#e59a7c;}
+
+  /* ---------------- platform pill rows ---------------- */
+  .pill-row{
+    display:flex;align-items:center;gap:1rem;
+    border:1px solid var(--tan);background:var(--card);
+    border-radius:16px;padding:0.9rem 1.1rem;
+  }
+  .pill-row.dashed{border-style:dashed;border-color:rgba(70,54,42,0.3);background:transparent;}
+  .pill-row .pname{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;flex:1;}
+  .pill-row .pstate{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.64rem;
+    letter-spacing:0.1em;text-transform:uppercase;
+    padding:0.3em 0.7em;border-radius:999px;
+  }
+
+  /* ---------------- flow diagram ---------------- */
+  .flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;}
+  .flow .node{
+    display:flex;flex-direction:column;align-items:center;gap:0.5rem;
+    width:110px;
+  }
+  .flow .node .dot{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;}
+  .flow .node span.label{font-size:0.78rem;font-weight:700;color:var(--walnut);}
+  .flow .arrow{width:44px;height:2px;background:var(--tan);position:relative;}
+  .flow .arrow::after{
+    content:"";position:absolute;right:-1px;top:50%;transform:translateY(-50%);
+    width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid var(--tan);
+  }
+  .flow .arrow.lit{background:var(--ember);}
+  .flow .arrow.lit::after{border-left-color:var(--ember);}
+
+  /* ---------------- nav arrows / hint ---------------- */
+  .nav-hint{
+    position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;
+    color:rgba(70,54,42,0.4);text-transform:uppercase;z-index:50;
+    display:flex;gap:1.2rem;align-items:center;transition:color 0.3s ease;
+  }
+  body.dark-active .nav-hint{color:rgba(240,231,215,0.45);}
+  .arrow-btn{
+    position:fixed;top:50%;transform:translateY(-50%);
+    width:46px;height:46px;border-radius:50%;
+    background:rgba(70,54,42,0.08);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    z-index:50;color:var(--walnut);transition:background 0.15s ease, color 0.3s ease;
+  }
+  .arrow-btn:hover{background:rgba(70,54,42,0.18);}
+  body.dark-active .arrow-btn{background:rgba(240,231,215,0.1);color:#F0E7D7;}
+  body.dark-active .arrow-btn:hover{background:rgba(240,231,215,0.2);}
+  .arrow-btn.prev{left:1.4rem;}
+  .arrow-btn.next{right:1.4rem;}
+  .arrow-btn svg{width:18px;height:18px;}
+
+  .slide-index{
+    position:fixed;top:1.4rem;right:1.6rem;
+    font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;
+    color:rgba(70,54,42,0.4);z-index:50;transition:color 0.3s ease;
+  }
+  body.dark-active .slide-index{color:rgba(240,231,215,0.5);}
+
+  .wordmark{display:flex;align-items:center;gap:0.6rem;}
+  .wordmark .s{
+    width:2.6rem;height:2.6rem;border-radius:10px;background:var(--ember);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.4rem;
+  }
+
+  @media (max-width:820px){
+    .slide-body{grid-template-columns:1fr;}
+    .slide-body .visual{order:-1;transform:scale(0.8);}
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-track"><div id="progress-fill"></div></div>
+<div id="section-tag"></div>
+<div class="slide-index"><span id="idx">1</span> / <span id="total"></span></div>
+
+<div id="deck">
+
+  <!-- 1: TITLE -->
+  <section class="slide dark" data-title="Superbridge">
+    <div class="slide-body stack" style="justify-items:center;text-align:center;">
+      <div>
+        <div class="wordmark" style="justify-content:center;margin-bottom:2rem;">
+          <span class="s">s</span>
+          <span class="display" style="font-weight:700;font-size:1.1rem;letter-spacing:0.02em;color:#c9c4b4;">ELECTRON WORKSHOP</span>
+        </div>
+        <h1 class="display" style="font-size:clamp(3rem,8vw,6.5rem);max-width:none;">Superbridge</h1>
+        <p class="lead" style="margin:0 auto;text-align:center;">One conversation, every platform. Messages from any connected app reach everyone else; people just keep using the app they like.</p>
+      </div>
+      <div class="visual" id="hero-train"></div>
+    </div>
+  </section>
+
+  <!-- 2: THE PROBLEM -->
+  <section class="slide" data-title="The problem">
+    <div class="slide-body">
+      <div>
+        <h1>Your community already picked five different apps</h1>
+        <p class="lead">Some members live in Telegram. Others won't leave WhatsApp, or only use Discord, or Signal, or Matrix. Every group ends up running the same conversation in parallel, in pieces, and nobody sees the whole thing.</p>
+      </div>
+      <div class="visual">
+        <div id="scatter-gears" style="position:relative;width:380px;height:340px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3: THE IDEA -->
+  <section class="slide" data-title="The idea">
+    <div class="slide-body">
+      <div>
+        <h1>Matrix sits in the middle. Everything else meshes into it.</h1>
+        <p class="lead">One Matrix room becomes the hub. Each platform bridges straight into it, like a gear meshing into a drive train. A message posted anywhere reaches every other platform automatically.</p>
+      </div>
+      <div class="visual">
+        <div id="idea-train" style="position:relative;width:440px;height:320px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4: MESSAGE FLOW -->
+  <section class="slide" data-title="How a message travels">
+    <div>
+      <h1>Send it once. It shows up everywhere else.</h1>
+      <p class="lead">A member types in whichever app is already open on their phone. Nobody copies, forwards, or checks a second group.</p>
+    </div>
+    <div class="visual" style="margin-top:2rem;">
+      <div class="flow" id="flow-diagram"></div>
+    </div>
+  </section>
+
+  <!-- 5: WHAT MEMBERS EXPERIENCE -->
+  <section class="slide" data-title="For members">
+    <div class="slide-body">
+      <div>
+        <h1>Nobody has to switch apps</h1>
+        <ul class="steps">
+          <li><span class="num">✓</span><span>Keep using Telegram, Discord, Signal, WhatsApp, or Matrix, whichever is already installed.</span></li>
+          <li><span class="num">✓</span><span>See messages from people on every other platform, in your own app, in your own language of emoji and stickers.</span></li>
+          <li><span class="num">✓</span><span>No new account, no new download, no new habit to build.</span></li>
+        </ul>
+      </div>
+      <div class="visual">
+        <div id="member-graphic" style="position:relative;width:340px;height:300px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6: WHAT ORGANISERS DO -->
+  <section class="slide" data-title="For organisers &middot; about 5 minutes">
+    <div class="slide-body">
+      <div>
+        <h1>You do the human steps. We do the wiring.</h1>
+        <ul class="steps" id="organiser-steps"></ul>
+      </div>
+      <div class="visual">
+        <div id="organiser-visual" style="position:relative;width:360px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7: WHAT EW AUTOMATES -->
+  <section class="slide dark" data-title="Behind the scenes">
+    <div class="slide-body">
+      <div>
+        <h1>The machinery you never have to touch</h1>
+        <p class="lead">Electron Workshop runs one Matrix homeserver and one bridge per platform, shared across every community in the network. Onboarding a new group means pointing your bridges at a room, not standing up new infrastructure.</p>
+      </div>
+      <div class="visual">
+        <div id="infra-diagram" style="position:relative;width:380px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8: INSIDE THE DASHBOARD -->
+  <section class="slide" data-title="Inside the dashboard">
+    <div>
+      <h1>Every bridge, one status page</h1>
+      <p class="lead">Organisers see which platforms are relaying, which are waiting on a human step, and which haven't been added yet, at a glance.</p>
+    </div>
+    <div class="visual" style="margin-top:1.5rem;">
+      <div id="dashboard-card" style="width:100%;max-width:760px;"></div>
+    </div>
+  </section>
+
+  <!-- 9: WHY IT MATTERS -->
+  <section class="slide dark" data-title="Why it matters">
+    <div class="slide-body">
+      <div>
+        <h1>Connected communities, not fragmented ones</h1>
+        <ul class="steps">
+          <li><span class="num">→</span><span>No one gets left out of a conversation because they use the "wrong" app.</span></li>
+          <li><span class="num">→</span><span>Organisers stop relaying messages by hand between platforms.</span></li>
+          <li><span class="num">→</span><span>One shared, self-hosted piece of infrastructure, not five separate accounts to manage.</span></li>
+        </ul>
+      </div>
+      <div class="visual">
+        <div id="why-train" style="position:relative;width:380px;height:300px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10: CLOSING -->
+  <section class="slide dark" data-title="Running a community?">
+    <div class="slide-body stack" style="justify-items:center;text-align:center;">
+      <div>
+        <h1 style="max-width:none;">Set up your Superbridge in about five minutes</h1>
+        <p class="lead" style="margin:0 auto 2rem;text-align:center;">You do the human steps. The workshop does the machinery.</p>
+        <div class="wordmark" style="justify-content:center;">
+          <span class="s">s</span>
+          <span class="display" style="font-weight:700;font-size:1.05rem;color:#c9c4b4;">electronworkshop.org/network</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow-btn prev" id="btn-prev" aria-label="Previous slide">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<button class="arrow-btn next" id="btn-next" aria-label="Next slide">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<div class="nav-hint">← → to navigate</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Gear geometry, ported from the dashboard's flat-gear generator
+// ---------------------------------------------------------------------------
+function gearPath(cx, cy, teeth, rOut, rRoot, rHole) {
+  const step = (Math.PI * 2) / teeth;
+  const pt = (r, a) => `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+  let d = `M ${pt(rOut, 0)}`;
+  for (let i = 0; i < teeth; i++) {
+    const t0 = i * step;
+    d += ` A ${rOut} ${rOut} 0 0 1 ${pt(rOut, t0 + step * 0.38)}`;
+    d += ` L ${pt(rRoot, t0 + step * 0.5)}`;
+    d += ` A ${rRoot} ${rRoot} 0 0 1 ${pt(rRoot, t0 + step * 0.88)}`;
+    d += ` L ${pt(rOut, t0 + step)}`;
+  }
+  d += ` Z M ${cx + rHole} ${cy} A ${rHole} ${rHole} 0 1 0 ${cx - rHole} ${cy} A ${rHole} ${rHole} 0 1 0 ${cx + rHole} ${cy} Z`;
+  return d;
+}
+
+function gearSVG({ size, teeth, color, spin, reverse, outline }) {
+  const r = size / 2;
+  const inset = outline ? 2 : 0;
+  const d = gearPath(r, r, teeth, r - inset, (r - inset) * 0.78, r * 0.3);
+  const anim = spin ? `animation:spin ${spin}s linear infinite;animation-direction:${reverse ? 'reverse' : 'normal'};` : '';
+  return `<svg class="gear" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="${anim}" aria-hidden="true">
+    <path d="${d}" fill="${outline ? 'none' : color}" stroke="${outline ? color : 'none'}" stroke-width="${outline ? 2 : 0}" stroke-dasharray="${outline ? '5 4' : ''}" fill-rule="evenodd"/>
+  </svg>`;
+}
+
+function chip(left, top, width, text, dark) {
+  return `<span class="chip${dark ? ' dark-chip' : ''}" style="left:${left}px;top:${top}px;width:${width}px;text-align:center;">${text}</span>`;
+}
+
+const PLATFORM = {
+  telegram: { name: 'Telegram', color: 'var(--telegram)' },
+  discord: { name: 'Discord', color: 'var(--discord)' },
+  signal: { name: 'Signal', color: 'var(--signal)' },
+  whatsapp: { name: 'WhatsApp', color: 'var(--whatsapp)' },
+};
+
+// Full gear train: Matrix hub + four meshed platform gears
+function buildTrain(el, { bridgedOnly = null, walnut = '#46362A' } = {}) {
+  const bridged = bridgedOnly || Object.keys(PLATFORM);
+  const slots = [
+    { key: 'telegram', size: 84, teeth: 9, left: 262, top: 8, labelTop: 92 },
+    { key: 'discord', size: 84, teeth: 9, left: 286, top: 168, labelTop: 252 },
+    { key: 'signal', size: 76, teeth: 8, left: 78, top: 188, labelTop: 264 },
+    { key: 'whatsapp', size: 76, teeth: 8, left: 62, top: 28, labelTop: 104 },
+  ];
+  let html = `<div style="position:absolute;left:145px;top:75px;">${gearSVG({ size: 150, teeth: 14, color: walnut, spin: 60 })}</div>`;
+  html += chip(145, 205, 150, 'Matrix', true);
+  slots.forEach(s => {
+    const on = bridged.includes(s.key);
+    const p = PLATFORM[s.key];
+    html += `<div style="position:absolute;left:${s.left}px;top:${s.top}px;">${gearSVG({ size: s.size, teeth: s.teeth, color: on ? p.color : 'rgba(70,54,42,0.35)', spin: on ? 34 : null, reverse: true, outline: !on })}</div>`;
+    html += chip(s.left, s.labelTop, s.size, p.name, false);
+  });
+  el.style.position = 'relative';
+  el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Slide-specific visuals
+// ---------------------------------------------------------------------------
+function buildHeroTrain() {
+  const el = document.getElementById('hero-train');
+  const slots = [
+    { key: 'telegram', size: 60, teeth: 9, left: 0, top: -140 },
+    { key: 'discord', size: 60, teeth: 9, left: 130, top: -70 },
+    { key: 'signal', size: 54, teeth: 8, left: 130, top: 70 },
+    { key: 'whatsapp', size: 54, teeth: 8, left: -130, top: 70 },
+  ];
+  const tg = { key:'telegram2', size:56, teeth:8, left:-130, top:-70 };
+  let html = `<div style="position:relative;width:360px;height:340px;">
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">${gearSVG({ size: 130, teeth: 13, color: '#F0E7D7', spin: 50 })}</div>`;
+  slots.forEach(s => {
+    const p = PLATFORM[s.key] || PLATFORM.telegram;
+    const name = s.key.replace('2','');
+    const pp = PLATFORM[name];
+    html += `<div style="position:absolute;left:calc(50% + ${s.left}px - ${s.size/2}px);top:calc(50% + ${s.top}px - ${s.size/2}px);">${gearSVG({ size: s.size, teeth: s.teeth, color: pp.color, spin: 26, reverse: true })}</div>`;
+  });
+  html += `<div style="position:absolute;left:calc(50% + ${tg.left}px - ${tg.size/2}px);top:calc(50% + ${tg.top}px - ${tg.size/2}px);">${gearSVG({ size: tg.size, teeth: tg.teeth, color: PLATFORM.telegram.color, spin: 26, reverse: true })}</div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function buildScatterGears() {
+  const el = document.getElementById('scatter-gears');
+  const items = [
+    { key: 'telegram', size: 70, left: 20, top: 10, rot: -12 },
+    { key: 'discord', size: 76, left: 220, top: 40, rot: 8 },
+    { key: 'signal', size: 60, left: 60, top: 210, rot: 20 },
+    { key: 'whatsapp', size: 66, left: 250, top: 220, rot: -18 },
+  ];
+  let html = '';
+  items.forEach(it => {
+    const p = PLATFORM[it.key];
+    html += `<div style="position:absolute;left:${it.left}px;top:${it.top}px;transform:rotate(${it.rot}deg);opacity:0.9;">
+      ${gearSVG({ size: it.size, teeth: 8, color: p.color })}
+    </div>`;
+    html += `<span class="chip" style="left:${it.left - 10}px;top:${it.top + it.size + 6}px;width:${it.size + 20}px;text-align:center;">${p.name}</span>`;
+  });
+  // dashed connecting lines to nowhere, to suggest disconnection
+  html += `<svg width="380" height="340" style="position:absolute;left:0;top:0;pointer-events:none;">
+    <line x1="90" y1="55" x2="180" y2="150" stroke="rgba(70,54,42,0.25)" stroke-width="2" stroke-dasharray="5 6"/>
+    <line x1="258" y1="78" x2="180" y2="150" stroke="rgba(70,54,42,0.25)" stroke-width="2" stroke-dasharray="5 6"/>
+    <line x1="90" y1="240" x2="180" y2="150" stroke="rgba(70,54,42,0.25)" stroke-width="2" stroke-dasharray="5 6"/>
+    <line x1="283" y1="253" x2="180" y2="150" stroke="rgba(70,54,42,0.25)" stroke-width="2" stroke-dasharray="5 6"/>
+    <circle cx="180" cy="150" r="4" fill="rgba(70,54,42,0.35)"/>
+  </svg>`;
+  el.innerHTML = html;
+}
+
+function buildFlow() {
+  const el = document.getElementById('flow-diagram');
+  const order = ['telegram', 'matrix', 'discord', 'signal', 'whatsapp'];
+  let html = '';
+  order.forEach((key, i) => {
+    const isMatrix = key === 'matrix';
+    const color = isMatrix ? 'var(--walnut)' : PLATFORM[key].color;
+    const label = isMatrix ? 'Matrix' : PLATFORM[key].name;
+    html += `<div class="node"><div class="dot" style="background:${color};${isMatrix ? 'width:68px;height:68px;' : ''}">${label[0]}</div><span class="label">${label}</span></div>`;
+    if (i < order.length - 1) html += `<div class="arrow" data-i="${i}"></div>`;
+  });
+  el.innerHTML = html;
+}
+
+function animateFlow() {
+  const arrows = document.querySelectorAll('#flow-diagram .arrow');
+  arrows.forEach(a => a.classList.remove('lit'));
+  let i = 0;
+  const step = () => {
+    if (i > 0) arrows[i - 1] && arrows[i - 1].classList.remove('lit');
+    if (i < arrows.length) {
+      arrows[i].classList.add('lit');
+      i++;
+      setTimeout(step, 450);
+    } else {
+      setTimeout(() => { arrows.forEach(a => a.classList.remove('lit')); }, 500);
+    }
+  };
+  step();
+}
+
+function buildMemberGraphic() {
+  const el = document.getElementById('member-graphic');
+  const items = [
+    { key: 'telegram', left: 20, top: 0 },
+    { key: 'discord', left: 200, top: 20 },
+    { key: 'signal', left: 30, top: 190 },
+    { key: 'whatsapp', left: 210, top: 200 },
+  ];
+  let html = `<svg width="340" height="300" style="position:absolute;left:0;top:0;pointer-events:none;">
+    <circle cx="170" cy="150" r="3" fill="rgba(70,54,42,0.3)"/>
+    <line x1="60" y1="40" x2="170" y2="150" stroke="rgba(70,54,42,0.2)" stroke-width="2"/>
+    <line x1="240" y1="60" x2="170" y2="150" stroke="rgba(70,54,42,0.2)" stroke-width="2"/>
+    <line x1="65" y1="220" x2="170" y2="150" stroke="rgba(70,54,42,0.2)" stroke-width="2"/>
+    <line x1="245" y1="230" x2="170" y2="150" stroke="rgba(70,54,42,0.2)" stroke-width="2"/>
+  </svg>`;
+  items.forEach(it => {
+    const p = PLATFORM[it.key];
+    html += `<div style="position:absolute;left:${it.left}px;top:${it.top}px;">${gearSVG({ size: 56, teeth: 8, color: p.color, spin: 30, reverse: true })}</div>`;
+  });
+  html += `<div style="position:absolute;left:145px;top:120px;">${gearSVG({ size: 60, teeth: 12, color: '#46362A', spin: 45 })}</div>`;
+  el.innerHTML = html;
+}
+
+const ORGANISER_STEPS = [
+  'Add @electronworkshop_bot to your Telegram group.',
+  'Invite the EW Discord bot to your server, then run one command.',
+  'Add the EW Signal number to your Signal group and send a message.',
+  'Add the EW WhatsApp number to your WhatsApp group.',
+];
+
+function buildOrganiserSteps() {
+  const el = document.getElementById('organiser-steps');
+  el.innerHTML = ORGANISER_STEPS.map((s, i) => `<li><span class="num">${i + 1}</span><span>${s}</span></li>`).join('');
+}
+
+function buildOrganiserVisual() {
+  const el = document.getElementById('organiser-visual');
+  const keys = ['telegram', 'discord', 'signal', 'whatsapp'];
+  let html = '<div style="display:flex;flex-direction:column;gap:0.7rem;">';
+  keys.forEach(k => {
+    const p = PLATFORM[k];
+    html += `<div class="pill-row"><div style="flex-shrink:0;">${gearSVG({ size: 34, teeth: 8, color: p.color, spin: 30, reverse: true })}</div><span class="pname">${p.name}</span><span class="pstate" style="background:rgba(102,116,66,0.16);color:var(--moss);">Ready</span></div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function buildInfraDiagram() {
+  const el = document.getElementById('infra-diagram');
+  const rows = [
+    { label: 'continuwuity', sub: 'Matrix homeserver, the hub' },
+    { label: 'mautrix bridges', sub: 'One per platform, shared network-wide' },
+    { label: 'Relay mode', sub: 'Matrix-only members can still take part' },
+    { label: 'Provisioning API', sub: 'Dashboard automates bridging and set-relay' },
+  ];
+  let html = '<div style="display:flex;flex-direction:column;gap:0.9rem;">';
+  rows.forEach((r, i) => {
+    html += `<div style="display:flex;align-items:center;gap:1rem;">
+      <div style="flex-shrink:0;">${gearSVG({ size: 40, teeth: 8, color: '#e59a7c', spin: 20 + i * 6, reverse: i % 2 === 0 })}</div>
+      <div><p class="display" style="margin:0;font-weight:700;color:#fff;">${r.label}</p><p style="margin:0;font-size:0.85rem;color:#c9c4b4;">${r.sub}</p></div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function buildDashboardCard() {
+  const el = document.getElementById('dashboard-card');
+  const rows = [
+    { key: 'telegram', detail: '@locallyai · bot added, relay on', state: 'relaying' },
+    { key: 'discord', detail: '#general · webhook active', state: 'relaying' },
+    { key: 'signal', detail: 'Waiting: add the EW number, send one message', state: 'waiting' },
+    { key: 'whatsapp', detail: 'Not connected to this bridge yet', state: 'off' },
+  ];
+  const pillStyle = {
+    relaying: 'background:rgba(102,116,66,0.16);color:var(--moss);',
+    waiting: 'background:rgba(176,118,34,0.16);color:var(--honey);',
+    off: 'background:transparent;color:rgba(70,54,42,0.5);',
+  };
+  const pillLabel = { relaying: 'Relaying', waiting: 'Waiting on you', off: 'Not connected' };
+  let html = `<div style="background:var(--card);border:1px solid var(--tan);border-radius:20px;padding:1.6rem;">
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem;">
+      <p class="display" style="margin:0;font-weight:800;font-size:1.4rem;">LocalAI</p>
+      <span style="display:flex;align-items:center;gap:0.5rem;font-weight:700;font-size:0.85rem;color:var(--moss);"><span style="width:9px;height:9px;border-radius:50%;background:var(--moss);display:inline-block;"></span>Live · relayed 2 minutes ago</span>
+    </div>
+    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.6rem;">`;
+  rows.forEach(r => {
+    const p = PLATFORM[r.key];
+    const dashed = r.state === 'off';
+    html += `<li class="pill-row${dashed ? ' dashed' : ''}">
+      <div style="flex-shrink:0;">${gearSVG({ size: 34, teeth: 8, color: dashed ? 'rgba(70,54,42,0.3)' : p.color, spin: dashed ? null : 26, reverse: true, outline: dashed })}</div>
+      <div style="flex:1;min-width:0;">
+        <p class="pname" style="margin:0;">${p.name}</p>
+        <p style="margin:0;font-size:0.82rem;color:rgba(70,54,42,0.65);">${r.detail}</p>
+      </div>
+      <span class="pstate" style="${pillStyle[r.state]}">${pillLabel[r.state]}</span>
+    </li>`;
+  });
+  html += '</ul></div>';
+  el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Deck controller
+// ---------------------------------------------------------------------------
+const slides = Array.from(document.querySelectorAll('.slide'));
+let current = 0;
+
+function render() {
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === current);
+    s.classList.toggle('exit-left', i < current);
+  });
+  document.getElementById('progress-fill').style.width = `${((current + 1) / slides.length) * 100}%`;
+  document.getElementById('idx').textContent = current + 1;
+  const isDark = slides[current].classList.contains('dark');
+  document.body.classList.toggle('dark-active', isDark);
+  const tag = document.getElementById('section-tag');
+  tag.textContent = slides[current].dataset.title || '';
+  tag.classList.toggle('on-dark', isDark);
+  document.getElementById('btn-prev').style.visibility = current === 0 ? 'hidden' : 'visible';
+  document.getElementById('btn-next').style.visibility = current === slides.length - 1 ? 'hidden' : 'visible';
+
+  if (current === 3) animateFlow();
+}
+
+function go(delta) {
+  const next = current + delta;
+  if (next < 0 || next >= slides.length) return;
+  current = next;
+  render();
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => go(-1));
+document.getElementById('btn-next').addEventListener('click', () => go(1));
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+});
+
+let touchStartX = null;
+window.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+window.addEventListener('touchend', (e) => {
+  if (touchStartX === null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+  touchStartX = null;
+});
+
+document.getElementById('total').textContent = slides.length;
+
+buildHeroTrain();
+buildScatterGears();
+buildTrain(document.getElementById('idea-train'));
+buildFlow();
+buildMemberGraphic();
+buildOrganiserSteps();
+buildOrganiserVisual();
+buildInfraDiagram();
+buildDashboardCard();
+buildTrain(document.getElementById('why-train'), { walnut: '#F0E7D7' });
+
+render();
+</script>
+</body>
+</html>
